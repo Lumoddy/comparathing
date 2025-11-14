@@ -1,0 +1,13 @@
+
+:root
+{
+    background-color: #BABABA;
+    background-color: light-dark(#BABABA, #000000);
+    color-scheme: light dark;
+}
+
+main
+{
+    background-color: #FFFFFF;
+    background-color: light-dark(#FFFFFF, #181818);
+}

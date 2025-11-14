@@ -7,6 +7,13 @@
     $errorMessage = null;
     session_start();
 
+    if (isset($_POST["q"]) && !empty($_POST["q"]))
+    {
+        $searchQuery = urlencode($_POST["q"]);
+        header("Location: /search.php?q=" . $searchQuery);
+        die;
+    }
+
     if ($creatingAccount)
     {
         if (isset($_POST["username"])
@@ -72,7 +79,7 @@
                 {
                     $_SESSION["user_id"] = $userId;
                     $_SESSION["username"] = $username;
-                    header("Location: ." . $redirectUrl, true);
+                    header("Location: " . $redirectUrl);
                     die;
                 }
                 else
@@ -86,7 +93,7 @@
                     else
                     {
                         $errorMessage = "An unknown error occurred";
-                        log_error("Database error " . $connection->errno . ": " . $connection->error);
+                        error_log("Database error " . $connection->errno . ": " . $connection->error);
                     }
                 }
             }
@@ -123,7 +130,7 @@
             else
             {
                 $stmt = $connection->prepare(
-                    "SELECT (id, password) FROM users WHERE email = ?");
+                    "SELECT id, password FROM users WHERE email = ?");
                 $stmt->bind_param(
                     "s",
                     $email);
@@ -142,7 +149,7 @@
                 {
                     $_SESSION["user_id"] = $result->fetch_assoc()["id"];
                     $_SESSION["username"] = $username;
-                    header("Location: ." . $redirectUrl, true);
+                    header("Location: " . $redirectUrl);
                     die;
                 }
             }
@@ -153,101 +160,178 @@
 <html lang="en">
 <head>
     <title>Login Comparathing</title>
+    <link rel="stylesheet" href="./css/page.css">
 </head>
 <body>
-    <form method="post">
-        <?php require __DIR__.'/$/logo.php' ?>
-        <?php
-            if ($creatingAccount)
-            {
-        ?>
-        <label for="login-username">
-            <span>Username</span>
-            <input
-                type="text"
-                id="login-username"
-                name="username"
-                placeholder="Username",
-                autocomplete="username">
-        </label>
-        <label for="login-email">
-            <span>Email</span>
-            <input
-                type="email"
-                id="login-email"
-                name="email"
-                placeholder="your@email.com"
-                autocomplete="email"
-                required>
-        </label>
-        <label for="login-password">
-            <span>Password</span>
-            <input
-                type="password"
-                id="login-password"
-                name="password"
-                placeholder="Password"
-                autocomplete="new-password"
-                required>
-        </label>
-        <label for="login-confirm-password">
-            <span>Confirm Password</span>
-            <input
-                type="password"
-                id="confirm-password"
-                name="confirm-password"
-                placeholder="Confirm Password"
-                required>
-        </label>
-        <?php
-                if ($errorMessage !== null)
-                {
-        ?>
-        <span class="error"><?php echo $errorMessage ?></span>
-        <?php
-                }
-        ?>
-        <button type="submit">Create Account</button>
-        <a href="./login.php?r=<?php echo urlencode($redirectUrl) ?>">Use Existing Account Instead</a>
-        <?php
-            }
-            else
-            {
-        ?>
-        <label for="login-email">
-            <span>Email</span>
-            <input
-                type="email"
-                id="login-email"
-                name="email"
-                placeholder="your@email.com"
-                autocomplete="email"
-                required>
-        </label>
-        <label for="login-password">
-            <span>Password</span>
-            <input
-                type="password"
-                id="login-password"
-                name="password"
-                placeholder="Password"
-                autocomplete="current-password"
-                required>
-        </label>
-        <?php
-                if ($errorMessage !== null)
-                {
-        ?>
-        <span class="error"><?php echo $errorMessage ?></span>
-        <?php
-                }
-        ?>
-        <button type="submit">Login</button>
-        <a href="./login.php?new&r=<?php echo urlencode($redirectUrl) ?>">Create Account Instead</a>
-        <?php
-            }
-        ?>
-    </form>
-    <a href="<?php echo urlencode($redirectUrl) ?>"></a>
+    <main
+        style="
+            max-width: 1200px;
+            margin-inline: auto">
+        <nav
+            id="navigation-bar"
+            style="
+                display: flex;
+                justify-content: space-between;
+                padding: 10px;
+                border-bottom: 1px solid #CCCCCC;
+                align-items: center">
+            <div>
+                <a
+                    class="logo"
+                    href="./">Logo</a>
+            </div>
+            <form method="post">
+                <input
+                    type="search"
+                    name="q"
+                    placeholder="Search..."
+                    required>
+                <button type="submit">Search</button>
+            </form>
+            <?php
+    if (isset($_SESSION["username"]))
+    {
+            ?>
+            <div>
+                <span><?php echo $_SESSION["username"] ?></span>
+            </div>
+            <div>
+                <a href="./logout.php">Logout</a>
+            </div>
+            <?php
+    }
+    else
+    {
+            ?>
+            <div>
+                <a href="./login.php?r=<?php if ($creatingAccount) { echo urlencode("new&"); } ?><?php echo urlencode($redirectUrl) ?>">Login</a>
+            </div>
+            <?php
+    }
+            ?>
+        </nav>
+        <form method="post"
+            style="
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                gap: 12px;
+                padding-block: 60px">
+            <?php
+    if ($creatingAccount)
+    {
+            ?>
+            <div>
+                <label for="login-username">
+                    <span>Username</span>
+                    <input
+                        type="text"
+                        id="login-username"
+                        name="username"
+                        placeholder="Username",
+                        autocomplete="username">
+                </label>
+            </div>
+            <div>
+                <label for="login-email">
+                    <span>Email</span>
+                    <input
+                        type="email"
+                            id="login-email"
+                        name="email"
+                        placeholder="your@email.com"
+                        autocomplete="email"
+                        required>
+                </label>
+            </div>
+            <div>
+                <label for="login-password">
+                    <span>Password</span>
+                    <input
+                        type="password"
+                        id="login-password"
+                        name="password"
+                        placeholder="Password"
+                        autocomplete="new-password"
+                        required>
+                </label>
+            </div>
+            <div>
+                <label for="login-confirm-password">
+                    <span>Confirm Password</span>
+                    <input
+                        type="password"
+                        id="confirm-password"
+                        name="confirm-password"
+                        placeholder="Confirm Password"
+                        required>
+                </label>
+            </div>
+            <?php
+        if ($errorMessage !== null)
+        {
+            ?>
+            <div>
+                <span class="error"><?php echo $errorMessage ?></span>
+            </div>
+            <?php
+        }
+            ?>
+            <div>
+                <button type="submit">Create Account</button>
+            </div>
+            <div>
+                <a href="./login.php?r=<?php echo urlencode($redirectUrl) ?>">Use Existing Account Instead</a>
+            </div>
+            <?php
+    }
+    else
+    {
+            ?>
+            <div>
+                <label for="login-email">
+                    <span>Email</span>
+                    <input
+                        type="email"
+                        id="login-email"
+                        name="email"
+                        placeholder="your@email.com"
+                        autocomplete="email"
+                        required>
+                </label>
+            </div>
+            <div>
+                <label for="login-password">
+                    <span>Password</span>
+                    <input
+                        type="password"
+                        id="login-password"
+                        name="password"
+                        placeholder="Password"
+                        autocomplete="current-password"
+                        required>
+                </label>
+            </div>
+            <?php
+        if ($errorMessage !== null)
+        {
+            ?>
+            <div>
+                <span class="error"><?php echo $errorMessage ?></span>
+            </div>
+            <?php
+        }
+            ?>
+            <div>
+                <button type="submit">Login</button>
+            </div>
+            <div>
+                <a href="./login.php?new&r=<?php echo urlencode($redirectUrl) ?>">Create Account Instead</a>
+            </div>
+            <?php
+    }
+            ?>
+        </form>
+    </main>
 </body>
 </html>
